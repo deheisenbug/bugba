@@ -2,7 +2,8 @@
 
 This is my attempt at building a somewhat useful C++20 library for Gameboy Advance
 (Game) Development. It should be a playground for developing moderately modern bare
-metal C++. Using only the `nice` features, which add clarity and/or usability, while
+metal C++. The Project also includes a simple clang and make based buildsystem.
+Using only the `nice` features, which add clarity and/or usability, while
 not introducing unnecessary overhead or hinder (runtime) performance.
 
 ```
