@@ -1,0 +1,74 @@
+# TODO
+
+## BUILD
+
+- stdlib/libgcc/compiler-rt
+
+later:
+- VPATH make
+
+## MISC
+
+static pattern rules https://www.gnu.org/software/make/manual/html_node/Static-Usage.html#Static-Usage
+
+c++: memory mapped I/O > https://www.youtube.com/watch?v=uwzuAGtAEFk
+
+# REFS
+
+https://llvm.org/docs/HowToCrossCompileBuiltinsOnArm.html
+
+https://clang.llvm.org/docs/CrossCompilation.html
+
+https://interrupt.memfault.com/blog/arm-cortexm-with-llvm-clang#update-clang-baremetal
+
+scanelf archives > https://unix.stackexchange.com/questions/103744/find-where-is-a-shared-library-symbol-defined-on-a-live-system-list-all-symbol
+
+https://www.coranac.com/documents/taptngba/
+
+https://www.mikrocontroller.net/articles/ARM_GCC
+
+https://www.etlcpp.com/
+
+https://github.com/wgroeneveld/gba-sprite-engine/
+
+https://brainbaking.com/post/2019/04/teaching-oo-with-gba/
+
+https://arobenko.github.io/bare_metal_cpp/
+
+https://www.embedded.com/building-bare-metal-arm-systems-with-gnu-part-1-getting-started/
+
+https://github.com/gbadev-org/awesome-gbadev
+
+## GDB
+
+https://sourceware.org/gdb/onlinedocs/gdb/TUI-Commands.html
+
+https://sourceware.org/gdb/onlinedocs/gdb/Registers.html
+
+https://github.com/pwndbg/pwndbg
+
+## LLDB
+
+https://daniao.ws/notes/macos/basic-lldb-scripting
+
+https://github.com/snare/voltron
+
+## MAKE
+
+https://www.gnu.org/software/make/manual/html_node/General-Search.html#General-Search
+
+## CLANG/LLVM
+
+https://sarcasm.github.io/notes/dev/compilation-database.html#clang
+
+https://clang.llvm.org/docs/JSONCompilationDatabase.html
+
+## MATH
+
+### FIXED POINT / DIVISION
+
+https://en.wikipedia.org/wiki/Division_algorithm
+https://oeis.org/A346496
+https://oeis.org/A346495
+
+

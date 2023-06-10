@@ -4,9 +4,12 @@ tmp
 .cache
 assets/*
 !assets/*.bmp
+!assets/*.grit
+!assets/*.license.*
 
 
 *.bak
+*.log
 
 .gdb_history
 gdb.txt
