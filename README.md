@@ -1,4 +1,4 @@
-# buGgedBoy Advance (bugba)
+# buGgedBoy Advance
 
 This is my attempt at building a somewhat useful C++20 library for Gameboy Advance
 (Game) Development. It should be a playground for developing moderately modern bare
@@ -14,9 +14,12 @@ DISCLAIMER: The project is an early stage and EVERYTHING is subject to change
 - clang/llvm
 - arm-none-eabi-*
 - [grit]() for automatic asset conversion
-- currently some pahts adjusted in Makefile //TODO: Fix this
 - emulator
     - currently only mgba supported
+
+### Setup
+
+Some include paths must be adjusted in `Makefile.conf`.
 
 ## Building
 
