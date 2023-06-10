@@ -14,7 +14,7 @@ DISCLAIMER: The project is an early stage and EVERYTHING is subject to change
 
 - clang/llvm
 - arm-none-eabi-*
-- [grit]() for automatic asset conversion
+- [grit](https://github.com/devkitPro/grit) for automatic asset conversion
 - emulator
     - currently only mgba supported
 
