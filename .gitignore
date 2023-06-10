@@ -1,0 +1,12 @@
+build
+log
+tmp
+.cache
+assets/*
+!assets/*.bmp
+
+
+*.bak
+
+.gdb_history
+gdb.txt
