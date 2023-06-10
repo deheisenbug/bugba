@@ -26,18 +26,20 @@ Some include paths must be adjusted in `Makefile.conf`.
 
 //TODO: extend
 
-### Simple LCD example
+### Build simple LCD example
 ```
 make example_lcd_pixel
 ```
 
-### Simple Example Game
+### Build and run example Game
 
 - requires grit
 
 ```
-make pengfly
+make run_pengfly
 ```
+
+![Example GIF](misc/pengfly_example.gif)
 
 ### Environment variables
 
