@@ -15,7 +15,7 @@
 #pragma once
 
 namespace gba::bios {
-
+    //TODO: check if number of swi_args is < 4 and if argument fits one register (?)
     template <uint32_t swi_nr, class ret_val, class... swi_args> requires std::is_same_v<ret_val, void>
     [[gnu::naked]]
     inline void swi(swi_args...) noexcept {
