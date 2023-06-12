@@ -39,6 +39,10 @@ https://www.embedded.com/building-bare-metal-arm-systems-with-gnu-part-1-getting
 
 https://github.com/gbadev-org/awesome-gbadev
 
+## ARM
+
+https://developer.arm.com/documentation/ddi0597/2023-03/Base-Instructions
+
 ## GDB
 
 https://sourceware.org/gdb/onlinedocs/gdb/TUI-Commands.html
