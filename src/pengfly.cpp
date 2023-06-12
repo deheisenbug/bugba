@@ -155,13 +155,13 @@ void lcd_init() {
   std::memcpy(&mem_pal.obj.p16x16.col[2][0],(void*)windows_spritePal,16*sizeof(rgb16_t));
   std::memcpy(&mem_pal.obj.p16x16.col[3][0],(void*)android_spritePal,16*sizeof(rgb16_t));
   std::memcpy(&mem_pal.obj.p16x16.col[4][0],(void*)chrome_spritePal,16*sizeof(rgb16_t));
-  std::memcpy(&mem_vram.mode.m012.char_block.bg[0].chars.as_4bpp.tile[0],(void*)tile_bg_iceTiles,8*sizeof(char_4bpp_tile_t));
-  std::memcpy(&mem_vram.mode.m012.char_block.bg[0].chars.as_4bpp.tile[8],(void*)tile_title_defaultTiles,20*12*sizeof(char_4bpp_tile_t));
-  std::memcpy(&mem_vram.mode.m012.char_block.obj[0].chars.as_4bpp.tile[0],(void*)penguin_spriteByElthenTiles,24*sizeof(char_4bpp_tile_t));
-  std::memcpy(&mem_vram.mode.m012.char_block.obj[1].chars.as_4bpp.tile[4],(void*)apple_spriteTiles,4*sizeof(char_4bpp_tile_t));
-  std::memcpy(&mem_vram.mode.m012.char_block.obj[1].chars.as_4bpp.tile[8],(void*)windows_spriteTiles,4*sizeof(char_4bpp_tile_t));
-  std::memcpy(&mem_vram.mode.m012.char_block.obj[1].chars.as_4bpp.tile[12],(void*)android_spriteTiles,4*sizeof(char_4bpp_tile_t));
-  std::memcpy(&mem_vram.mode.m012.char_block.obj[1].chars.as_4bpp.tile[16],(void*)chrome_spriteTiles,4*sizeof(char_4bpp_tile_t));
+  std::memcpy(&mem_vram.mode1.char_block.bg[0].chars.as_4bpp.tile[0],(void*)tile_bg_iceTiles,8*sizeof(char_4bpp_tile_t));
+  std::memcpy(&mem_vram.mode1.char_block.bg[0].chars.as_4bpp.tile[8],(void*)tile_title_defaultTiles,20*12*sizeof(char_4bpp_tile_t));
+  std::memcpy(&mem_vram.mode1.char_block.obj[0].chars.as_4bpp.tile[0],(void*)penguin_spriteByElthenTiles,24*sizeof(char_4bpp_tile_t));
+  std::memcpy(&mem_vram.mode1.char_block.obj[1].chars.as_4bpp.tile[4],(void*)apple_spriteTiles,4*sizeof(char_4bpp_tile_t));
+  std::memcpy(&mem_vram.mode1.char_block.obj[1].chars.as_4bpp.tile[8],(void*)windows_spriteTiles,4*sizeof(char_4bpp_tile_t));
+  std::memcpy(&mem_vram.mode1.char_block.obj[1].chars.as_4bpp.tile[12],(void*)android_spriteTiles,4*sizeof(char_4bpp_tile_t));
+  std::memcpy(&mem_vram.mode1.char_block.obj[1].chars.as_4bpp.tile[16],(void*)chrome_spriteTiles,4*sizeof(char_4bpp_tile_t));
 }
 
 void lcd_setup() {
@@ -172,14 +172,14 @@ void lcd_setup() {
     for(int j = 0; j<30; j++) {
       bg_block_normal_t bg_block;
       bg_block.tile_nr = 4;
-      mem_vram.mode.m012.screen_block.se[4].map.normal[i][j] = bg_block;
+      mem_vram.mode1.screen_block.se[4].map.normal[i][j] = bg_block;
     }
   }
   for(int i = 18; i<20; i++) {
     for(int j = 0; j<30; j++) {
       bg_block_normal_t bg_block;
       bg_block.tile_nr = (i % 2) * 2 + (j % 2);
-      mem_vram.mode.m012.screen_block.se[4].map.normal[i][j] = bg_block;
+      mem_vram.mode1.screen_block.se[4].map.normal[i][j] = bg_block;
     }
   }
   for(int i = 0; i<20; i++) {
@@ -187,7 +187,7 @@ void lcd_setup() {
       bg_block_normal_t bg_block;
       bg_block.tile_nr = 8;
       bg_block.pal_nr  = 1;
-      mem_vram.mode.m012.screen_block.se[5].map.normal[i][j] = bg_block;
+      mem_vram.mode1.screen_block.se[5].map.normal[i][j] = bg_block;
     }
   }
   for(int i = 0; i<11; i++) {
@@ -195,7 +195,7 @@ void lcd_setup() {
       bg_block_normal_t bg_block;
       bg_block.tile_nr = 8 + i*20 + j;
       bg_block.pal_nr = 1;
-      mem_vram.mode.m012.screen_block.se[5].map.normal[3+i][5+j] = bg_block;
+      mem_vram.mode1.screen_block.se[5].map.normal[3+i][5+j] = bg_block;
     }
   }
   attr0_normal_t obj_disabled;
@@ -328,7 +328,7 @@ int main()
           game_state = game_state_t::logo;
         break;
       case game_state_t::logo:
-        if (key_now.btn_sta != 1) {
+        if (key_now.btn_sta == key_state_t::down) {
           game_state = game_state_t::logo_trans_0;
         };
         break;
@@ -340,7 +340,7 @@ int main()
               bg_block.tile_nr = 5;
               bg_block.pal_nr  = 0;
               for(int i = 0;i<30;i++) {
-                mem_vram.mode.m012.screen_block.se[5].map.normal[fade_pattern[logo_frame_0]][i] = bg_block;
+                mem_vram.mode1.screen_block.se[5].map.normal[fade_pattern[logo_frame_0]][i] = bg_block;
               }
               logo_frame_0 = logo_frame_0 + 1;
             } else {
@@ -390,7 +390,7 @@ int main()
           intro_frame = intro_frame + 1;
         break;
       case game_state_t::running:
-        if (key_now.btn_a != 1 || key_now.btn_r != 1 || key_now.btn_l != 1 ) {
+        if (key_now.btn_a == key_state_t::down || key_now.btn_r == key_state_t::down || key_now.btn_l == key_state_t::down ) {
           entity_penguin.attr2.tile_nr  = 4 * ((running_frame/2) % 6);
           if(running_frame % 8 == 0 && entity_penguin.attr0.offs_y == 128) {
             reg_snd.snd_ch4_noise = (snd_noise_t) {
@@ -402,14 +402,14 @@ int main()
           }
           not_random = not_random + frame;
         }
-        if (key_now.btn_r != 1 && entity_penguin.attr1.offs_x < 224 ) {
+        if (key_now.btn_r == key_state_t::down && entity_penguin.attr1.offs_x < 224 ) {
           entity_penguin.attr1.offs_x = entity_penguin.attr1.offs_x +1;
           entity_penguin.attr1.flip_x = 0;
-        } else if (key_now.btn_l != 1 && entity_penguin.attr1.offs_x > 0) {
+        } else if (key_now.btn_l == key_state_t::down && entity_penguin.attr1.offs_x > 0) {
           entity_penguin.attr1.offs_x = entity_penguin.attr1.offs_x -1;
           entity_penguin.attr1.flip_x = 1;
         }
-        if (key_now.btn_a != 1 && entity_penguin.attr0.offs_y == 128) {
+        if (key_now.btn_a == key_state_t::down && entity_penguin.attr0.offs_y == 128) {
           using namespace gba::hw;
           lift = 6;
           reg_snd.snd_ch1_freq = (snd_freq_t) {
@@ -463,13 +463,13 @@ int main()
         if ( enemy_speed == 5 ) {
           game_state = game_state_t::win;
         }
-        if (key_now.btn_sta != 1 && key_now.btn_sel != 1) {
+        if (key_now.btn_sta == key_state_t::down && key_now.btn_sel == key_state_t::down) {
           game_state = game_state_t::reset;
         }
         break;
       case game_state_t::score:
         if (initial_run) {
-          std::memcpy(&mem_vram.mode.m012.char_block.bg[0].chars.as_4bpp.tile[8],(void*)tile_title_retryTiles,20*12*sizeof(char_4bpp_tile_t));
+          std::memcpy(&mem_vram.mode1.char_block.bg[0].chars.as_4bpp.tile[8],(void*)tile_title_retryTiles,20*12*sizeof(char_4bpp_tile_t));
           initial_run = false;
         }
           if(!was_finished) {
@@ -490,7 +490,7 @@ int main()
                 bg_block_normal_t bg_block;
                 bg_block.tile_nr = 8;
                 bg_block.pal_nr  = 1;
-                mem_vram.mode.m012.screen_block.se[5].map.normal[i][j] = bg_block;
+                mem_vram.mode1.screen_block.se[5].map.normal[i][j] = bg_block;
               }
             }
             for(int i = 0; i<11; i++) {
@@ -498,14 +498,14 @@ int main()
                 bg_block_normal_t bg_block;
                 bg_block.tile_nr = 8 + i*20 + j;
                 bg_block.pal_nr = 2;
-                mem_vram.mode.m012.screen_block.se[5].map.normal[3+i][5+j] = bg_block;
+                mem_vram.mode1.screen_block.se[5].map.normal[3+i][5+j] = bg_block;
               }
             }
             glob_ablend.val_1st = 31;
             glob_ablend.val_2nd = 0;
             reg_disp.ablend_coeff = glob_ablend;
           }
-        if (key_now.btn_sta != 1 && key_now.btn_sel != 1) {
+        if (key_now.btn_sta == key_state_t::down && key_now.btn_sel == key_state_t::down) {
           game_state = game_state_t::reset;
         }
         break;
@@ -513,13 +513,13 @@ int main()
         if(!was_finished) {
           was_finished = 1;
           enemies_reset();
-          std::memcpy(&mem_vram.mode.m012.char_block.bg[0].chars.as_4bpp.tile[8],(void*)tile_title_winTiles,20*12*sizeof(char_4bpp_tile_t));
+          std::memcpy(&mem_vram.mode1.char_block.bg[0].chars.as_4bpp.tile[8],(void*)tile_title_winTiles,20*12*sizeof(char_4bpp_tile_t));
           for(int i = 0; i<20; i++) {
             for(int j = 0; j<30; j++) {
               bg_block_normal_t bg_block;
               bg_block.tile_nr = 8;
               bg_block.pal_nr  = 1;
-              mem_vram.mode.m012.screen_block.se[5].map.normal[i][j] = bg_block;
+              mem_vram.mode1.screen_block.se[5].map.normal[i][j] = bg_block;
             }
           }
           for(int i = 0; i<11; i++) {
@@ -527,7 +527,7 @@ int main()
               bg_block_normal_t bg_block;
               bg_block.tile_nr = 8 + i*20 + j;
               bg_block.pal_nr = 3;
-              mem_vram.mode.m012.screen_block.se[5].map.normal[3+i][5+j] = bg_block;
+              mem_vram.mode1.screen_block.se[5].map.normal[3+i][5+j] = bg_block;
             }
           }
           glob_ablend.val_1st = 31;
@@ -543,7 +543,7 @@ int main()
             .reset = true,
           };
         }
-        if (key_now.btn_sta != 1 && key_now.btn_sel != 1) {
+        if (key_now.btn_sta == key_state_t::down && key_now.btn_sel == key_state_t::down) {
           game_state = game_state_t::reset;
         }
         break;
