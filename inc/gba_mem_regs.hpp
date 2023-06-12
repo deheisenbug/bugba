@@ -80,14 +80,15 @@ namespace gba::hw {
     static_assert(
       sizeof(m4_t) == 98304
     );
-    union mode_access_t {
-      m012_t m012;
-      m3_t m3;
-      m4_t m4;
+  public:
+    union {
+      m012_t mode0;
+      m012_t mode1;
+      m012_t mode2;
+      m3_t mode3;
+      m4_t mode4;
       // TODO: m5
     } packed();
-    public:
-      mode_access_t mode;
   };
   static_assert(
     std::is_standard_layout_v<video_memory>
