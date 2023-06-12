@@ -18,18 +18,22 @@ namespace gba::dtypes {
   /**
    * keypad input register
    */
+  enum class key_state_t : uint16_t {
+    down = 0,
+    up = 1,
+  };
   class key_inp_t {
     public:
-      uint16_t btn_a : 1 = 1;
-      uint16_t btn_b : 1 = 1;
-      uint16_t btn_sel : 1 = 1;
-      uint16_t btn_sta : 1 = 1;
-      uint16_t btn_r : 1 = 1;
-      uint16_t btn_l : 1 = 1;
-      uint16_t btn_u : 1 = 1;
-      uint16_t btn_d : 1 = 1;
-      uint16_t btn_rs : 1 = 1;
-      uint16_t btn_ls : 1 = 1;
+      key_state_t btn_a : 1 = key_state_t::up;
+      key_state_t btn_b : 1 = key_state_t::up;
+      key_state_t btn_sel : 1 = key_state_t::up;
+      key_state_t btn_sta : 1 = key_state_t::up;
+      key_state_t btn_r : 1 = key_state_t::up;
+      key_state_t btn_l : 1 = key_state_t::up;
+      key_state_t btn_u : 1 = key_state_t::up;
+      key_state_t btn_d : 1 = key_state_t::up;
+      key_state_t btn_rs : 1 = key_state_t::up;
+      key_state_t btn_ls : 1 = key_state_t::up;
       uint16_t : 6;
   };
   using reg_key_inp_t = reg_t<key_inp_t,reg16_t>;
