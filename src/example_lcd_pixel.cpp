@@ -15,13 +15,12 @@ int main()
 
   reg_disp.lcd_conf = (lcd_conf_t){
     .mode = lcd_mode_t::mode3,
-    .oam_map = oam_map_t::one_dim,
     .bg2 = true,
   };
-  mem_vram.mode.m3.pix[72][112] = {.red = 31};
-  mem_vram.mode.m3.pix[72][128] = {.green = 31};
-  mem_vram.mode.m3.pix[88][112] = {.blue = 31};
-  mem_vram.mode.m3.pix[88][128] = {
+  mem_vram.mode3.pix[72][112] = {.red = 31};
+  mem_vram.mode3.pix[72][128] = {.green = 31};
+  mem_vram.mode3.pix[88][112] = {.blue = 31};
+  mem_vram.mode3.pix[88][128] = {
     .red = 31,
     .green = 31,
   };
