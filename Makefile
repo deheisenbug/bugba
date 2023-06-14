@@ -26,6 +26,7 @@ IDIR ::= inc
 LDIR ::= lib
 LOGDIR ::= log
 SCRIPTDIR ::= script
+EXTDIR ::= extern
 
 ## TOOLS/COMPILER
 
@@ -71,8 +72,13 @@ GCC_SYSROOT ::= $(shell arm-none-eabi-gcc -mcpu=arm7tdmi -print-sysroot 2>&1)
 GCC_MULTIDIR ::= $(shell arm-none-eabi-gcc -mcpu=arm7tdmi -print-multi-directory 2>&1)
 GCC_LIBDIR ::= ${GCC_SYSROOT}/lib/${GCC_MULTIDIR}
 
-GCC_LIBSEARCHDIR ?= /usr/lib/gcc/arm-none-eabi/13.1.0/ 
-GCC_LIBINCDIRS ?= -I/usr/arm-none-eabi/include/c++/13.1.0/ -I/usr/arm-none-eabi/include/c++/13.1.0/arm-none-eabi/
+## Use agbabi and LLVM's C++ standard library
+LD_LIBSEARCH ?= -L${EXTDIR}/agbabi/build/${CONF}/
+CP_LIBINC ?= -I/usr/include/c++/v1/ -D_LIBCPP_HAS_NO_THREADS
+
+## Use gcc's c/c++ standard library
+#LD_LIBSEARCH ?= -L/usr/lib/gcc/arm-none-eabi/13.1.0/
+#CP_LIBINC ?= -I/usr/arm-none-eabi/include/c++/13.1.0/ -I/usr/arm-none-eabi/include/c++/13.1.0/arm-none-eabi/
 
 ### COMPILER AND ASSEMBLER FLAGS
 CXASFL ::= -mcpu=arm7tdmi -Wall -Werror -I${IDIR} -I${BIDIR}
@@ -116,8 +122,10 @@ CXFL ::= ${CXASFL}
 CXFL += -fstack-usage
 #TODO: investigate how -sysroot works
 CXFL += --sysroot=${GCC_SYSROOT}
-CXFL += -I${GCC_LIBDIR}
-CXFL += -I/usr/arm-none-eabi/include/
+#CXFL += -I${GCC_LIBDIR}
+#CXFL += -I/usr/arm-none-eabi/include/
+##Debug includes
+#CXFL += -H
 # Only necessary when not including standard path with (-nostdinc)
 #CXFL += -I/usr/lib/gcc/arm-none-eabi/13.1.0/include/
 
@@ -135,7 +143,7 @@ CPFL ::= -std=c++20 -fno-exceptions -fno-unwind-tables -fno-rtti
 CPFL += -fno-threadsafe-statics
 #CPFL += -ffreestanding #why no work? #TODO
 #CPFL += -fmodules
-CPFL += ${GCC_LIBINCDIRS}
+CPFL += ${CP_LIBINC}
 
 ### ADDITIONAL C COMPILER FLAGS
 CCFL ::=
@@ -144,7 +152,7 @@ CCFL ::=
 ASFL ::= ${CXASFL}
 
 ### LINKER FLAGS
-LDFL ::= -nostdlib -Tlink.ld -L${GCC_LIBSEARCHDIR} -L/usr/arm-none-eabi/lib/
+LDFL ::= -nostdlib -Tlink.ld ${LD_LIBSEARCH} -L/usr/arm-none-eabi/lib/
 
 ifdef VERBOSE
 	LDFL += --verbose
@@ -184,7 +192,13 @@ clean:
 cleanall:
 	rm -rf ./$(BBASE)/*
 
-.PHONY: clean cdb ${PROGS} ${RUNS} ${DBGS} ${GDBS} ${BINS}
+cleanlib:
+	rm -rf ./${EXTDIR}/agbabi/build/${CONF}
+
+cleanliball:
+	rm -rf ./${EXTDIR}/agbabi/build
+
+.PHONY: clean cleanall cleanlib cleanliball cdb ${PROGS} ${RUNS} ${DBGS} ${GDBS} ${BINS}
 .PRECIOUS: ${BDIR}/%.s ${BDIR}/%.o ${BDIR}/%.elf ${BDIR}/%.bin
 
 -include ${DEPDIR}/*.d
@@ -274,16 +288,28 @@ ${BDIR}/%.bin: ${BDIR}/%.elf Makefile | ${BDIR}
 
 # Linking rule macro/function
 define link_ld
-	${LD} ${LDFL} -Map ${<:.o=.map} ${OBJ_COMM} ${OBJ_ADD} $< -lc -lgcc -o $@
+	${LD} ${LDFL} -Map ${<:.o=.map} ${OBJ_COMM} ${OBJ_ADD} $< -lagbabi -o $@
 endef
+#-lc -lgcc 
 
 # Basic linking rule
-${BDIR}/%.elf: ${BDIR}/%.o ${OBJ_COMM} Makefile link.ld mem_ioregs.ld | ${BDIR}
+${BDIR}/%.elf: ${BDIR}/%.o ${OBJ_COMM} Makefile link.ld mem_ioregs.ld ${EXTDIR}/agbabi/build/${CONF}/libagbabi.a | ${BDIR}
 	$(link_ld)
 
 # Generated linking rules per binary
 define generate_linkrule
-$${BDIR}/$(1).elf: $${BDIR}/$(1).o $${OBJ_COMM} $$$${OBJ_ADD} Makefile link.ld mem_ioregs.ld | $${BDIR}
+$${BDIR}/$(1).elf: $${BDIR}/$(1).o $${OBJ_COMM} $$$${OBJ_ADD} Makefile link.ld mem_ioregs.ld $${EXTDIR}/agbabi/build/$${CONF}/libagbabi.a | $${BDIR}
 	$$(link_ld)
 endef
 $(foreach prog, $(PROGS), $(eval $(call generate_linkrule,$(prog))))
+
+## AGBABI specific targets
+
+# Create Makefile
+${EXTDIR}/agbabi/build/${CONF}/Makefile:
+	cd ${EXTDIR}/agbabi && cmake -S . -B build/${CONF} --toolchain=cross/agb.cmake -DCMAKE_BUILD_TYPE=${CONF}
+##-DCMAKE_C_FLAGS_${CONF}="${CXASFL}"
+
+# Build library
+${EXTDIR}/agbabi/build/${CONF}/libagbabi.a: ${EXTDIR}/agbabi/build/${CONF}/Makefile
+	cd ${EXTDIR}/agbabi && cmake --build build/${CONF}

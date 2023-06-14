@@ -30,7 +30,9 @@ SECTIONS {
         __data_end = ABSOLUTE(.);
         
         __text_iwram_start = ABSOLUTE(.);
-        *(.text_iwram .text_iwram.*);
+        *(.text_iwram .text_iwram.* .iwram.*);
+        /* TODO: fix .iwram from agbabi */
+        /* agbabi(.iwram.*); */
         . = ALIGN(4);
         __text_iwram_end = ABSOLUTE(.);
         
