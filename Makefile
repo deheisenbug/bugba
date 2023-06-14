@@ -155,7 +155,7 @@ ARFL ::=
 
 ### TARGETS
 
-PROGS ::= example_lcd_pixel pengfly
+PROGS ::= example_lcd_pixel example_paint pengfly
 
 RUNS ::= $(addprefix run_,${PROGS})
 GDBS ::= $(addprefix gdb_,${PROGS})
