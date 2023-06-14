@@ -1,0 +1,3 @@
+[submodule "extern/agbabi"]
+	path = extern/agbabi
+	url = https://github.com/felixjones/agbabi.git
