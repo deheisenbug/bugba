@@ -9,7 +9,7 @@
  */
 
 #include <cstddef>
-#include <sys/_stdint.h>
+#include <cstdint>
 #include <type_traits>
 
 #pragma once

@@ -8,7 +8,6 @@
  */
 
 #include <cstdint>
-#include <sys/_stdint.h>
 
 #include "gba_types.hpp"
 #include "gba_reg_common.hpp"

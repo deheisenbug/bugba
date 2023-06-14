@@ -8,7 +8,6 @@
 
 #include <cstdint>
 #include <cstring>
-#include <sys/_stdint.h>
 
 #include "gba_reg_lcd.hpp"
 #include "gba_reg_snd.hpp"
