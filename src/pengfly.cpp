@@ -92,6 +92,7 @@ void loop() {
   asm("1: b 1b");
 }
 
+//TODO: move to library
 void irq_handler() {
   using namespace gba::dtypes;
   using namespace gba::hw;
@@ -103,6 +104,7 @@ void irq_handler() {
   bios_irqflags = bios_irqflags | irq_flags;
 }
 
+//TODO: move to library
 void irq_init() {
   using namespace gba::dtypes;
   irq_vector = irq_handler;
@@ -146,6 +148,7 @@ void lcd_init() {
     .screen_base_block = 4,
     .screen_size = bg_conf_t::size_normal::n256x256,
   };
+  //TODO: create library/function for dynamic tile loading
   std::memcpy(&mem_pal.bg.p16x16.col[0][0],(void*)tile_bg_icePal,16*sizeof(rgb16_t));
   std::memcpy(&mem_pal.bg.p16x16.col[1][0],(void*)tile_title_defaultPal,16*sizeof(rgb16_t));
   std::memcpy(&mem_pal.bg.p16x16.col[2][0],(void*)tile_title_retryPal,2*sizeof(rgb16_t));
@@ -172,6 +175,7 @@ void lcd_setup() {
     for(int j = 0; j<30; j++) {
       bg_block_normal_t bg_block;
       bg_block.tile_nr = 4;
+      //TODO: create library/function for dynamic tile loading
       mem_vram.mode1.screen_block.se[4].map.normal[i][j] = bg_block;
     }
   }
