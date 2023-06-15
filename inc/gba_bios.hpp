@@ -11,7 +11,7 @@
 #include "gba_macros.hpp"
 #include "gba_reg_irq.hpp"
 #include "gba_types.hpp"
-#include <sys/_stdint.h>
+#include <cstdint>
 
 #pragma once
 

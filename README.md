@@ -22,6 +22,8 @@ DISCLAIMER: The project is an early stage and EVERYTHING is subject to change
 
 Some include paths must be adjusted in `Makefile.conf`.
 
+//TODO: git submodule init/fetch?
+
 ## Building
 
 //TODO: extend
