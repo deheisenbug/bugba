@@ -72,13 +72,23 @@ GCC_SYSROOT ::= $(shell arm-none-eabi-gcc -mcpu=arm7tdmi -print-sysroot 2>&1)
 GCC_MULTIDIR ::= $(shell arm-none-eabi-gcc -mcpu=arm7tdmi -print-multi-directory 2>&1)
 GCC_LIBDIR ::= ${GCC_SYSROOT}/lib/${GCC_MULTIDIR}
 
-## Use agbabi and LLVM's C++ standard library
-LD_LIBSEARCH ?= -L${EXTDIR}/agbabi/build/${CONF}/
-CP_LIBINC ?= -I/usr/include/c++/v1/ -D_LIBCPP_HAS_NO_THREADS
+## Some paths to host libraries/headers, defaults for current arch (based) linux
+## should be set in Makefile.conf
+HOST_LDFL_LIBSEARCH ?= -L/usr/lib/gcc/arm-none-eabi/13.1.0/
+HOST_CPFL_LIBINC ?= -I/usr/arm-none-eabi/include/c++/13.1.0/ -I/usr/arm-none-eabi/include/c++/13.1.0/arm-none-eabi/
+HOST_LIBCPPDIR ?= /usr/include/c++/v1/
 
+## Use agbabi and LLVM's C++ standard library
+ifdef USE_AGBABI_LIBCPP
+LDFL_LIBSEARCH ?= -L${EXTDIR}/agbabi/build/${CONF}/
+CPFL_LIBINC ?= -I${HOST_LIBCPPDIR} -D_LIBCPP_HAS_NO_THREADS
+LDFL_LATE = -lagbabi
+else
 ## Use gcc's c/c++ standard library
-#LD_LIBSEARCH ?= -L/usr/lib/gcc/arm-none-eabi/13.1.0/
-#CP_LIBINC ?= -I/usr/arm-none-eabi/include/c++/13.1.0/ -I/usr/arm-none-eabi/include/c++/13.1.0/arm-none-eabi/
+LDFL_LIBSEARCH = ${HOST_LDFL_LIBSEARCH}
+CPFL_LIBINC = ${HOST_CPFL_LIBINC}
+LDFL_LATE = -lc -lgcc
+endif
 
 ### COMPILER AND ASSEMBLER FLAGS
 CXASFL ::= -mcpu=arm7tdmi -Wall -Werror -I${IDIR} -I${BIDIR}
@@ -143,7 +153,7 @@ CPFL ::= -std=c++20 -fno-exceptions -fno-unwind-tables -fno-rtti
 CPFL += -fno-threadsafe-statics
 #CPFL += -ffreestanding #why no work? #TODO
 #CPFL += -fmodules
-CPFL += ${CP_LIBINC}
+CPFL += ${CPFL_LIBINC}
 
 ### ADDITIONAL C COMPILER FLAGS
 CCFL ::=
@@ -152,7 +162,7 @@ CCFL ::=
 ASFL ::= ${CXASFL}
 
 ### LINKER FLAGS
-LDFL ::= -nostdlib -Tlink.ld ${LD_LIBSEARCH} -L/usr/arm-none-eabi/lib/
+LDFL ::= -nostdlib -Tlink.ld ${LDFL_LIBSEARCH} -L/usr/arm-none-eabi/lib/
 
 ifdef VERBOSE
 	LDFL += --verbose
@@ -224,20 +234,18 @@ ${BBASE}/compile_commands.json: ${CDBDIR}/*.part.json ${CDBDIR} | ${BBASE}
 OBJ_ADD ::=
 SCR_ADD ::=
 INC_ADD ::=
-ASSETS ::=
 
-pengfly: ASSETS += penguin_spriteByElthen tile_bg_ice tile_title_default apple_sprite windows_sprite android_sprite chrome_sprite tile_title_retry tile_title_win
+pengfly_ASSETS := penguin_spriteByElthen tile_bg_ice tile_title_default apple_sprite windows_sprite android_sprite chrome_sprite tile_title_retry tile_title_win
 
 # Generate the target specific variables for each binary
 define generate_deps
-$(1): OBJ_ADD += $$(patsubst %, $${BDIR}/%.o, $${ASSETS})
-$(1): INC_ADD += $$(patsubst %, %.h, $${ASSETS})
-$(1): INC_DEP += $$(patsubst %, $${BIDIR}/%.h, $${ASSETS})
+$(1)_OBJ_ADD := $(patsubst %, ${BDIR}/%.o, $(value $(1)_ASSETS))
+$(1)_INC_ADD := $(patsubst %, %.h, $(value $(1)_ASSETS))
+$(1)_INC_DEP := $(patsubst %, ${BIDIR}/%.h, $(value $(1)_ASSETS))
 endef
 $(foreach prog, $(PROGS), $(eval $(call generate_deps,$(prog))))
 
 ### PATTERN
-.SECONDEXPANSION: # second expansion is used to add additional objects as prerequisites for specific targets. is this a good idea?
 
 # C compilation rule macro/function
 define compile_cc
@@ -259,7 +267,8 @@ ${BDIR}/%.s: ${SDIR}/%.cpp Makefile | ${BDIR} ${DEPDIR} ${CDBDIR}
 
 # Generated CPP source compilation rules per binary
 define generate_cprule
-$${BDIR}/$(1).s: ${SDIR}/$(1).cpp Makefile $$$${INC_DEP} | $${BDIR} $${DEPDIR} $${CDBDIR}
+$$(eval $(1) : INC_ADD = $$(value $(1)_INC_ADD))
+$${BDIR}/$(1).s: $${SDIR}/$(1).cpp Makefile $$(value $(1)_INC_DEP) | $${BDIR} $${DEPDIR} $${CDBDIR}
 	$$(compile_cp)
 endef
 $(foreach prog, $(PROGS), $(eval $(call generate_cprule,$(prog))))
@@ -288,7 +297,7 @@ ${BDIR}/%.bin: ${BDIR}/%.elf Makefile | ${BDIR}
 
 # Linking rule macro/function
 define link_ld
-	${LD} ${LDFL} -Map ${<:.o=.map} ${OBJ_COMM} ${OBJ_ADD} $< -lagbabi -o $@
+	${LD} ${LDFL} -Map ${<:.o=.map} ${OBJ_COMM} ${OBJ_ADD} $< ${LDFL_LATE} -o $@
 endef
 #-lc -lgcc 
 
@@ -298,7 +307,8 @@ ${BDIR}/%.elf: ${BDIR}/%.o ${OBJ_COMM} Makefile link.ld mem_ioregs.ld ${EXTDIR}/
 
 # Generated linking rules per binary
 define generate_linkrule
-$${BDIR}/$(1).elf: $${BDIR}/$(1).o $${OBJ_COMM} $$$${OBJ_ADD} Makefile link.ld mem_ioregs.ld $${EXTDIR}/agbabi/build/$${CONF}/libagbabi.a | $${BDIR}
+$$(eval $(1) : OBJ_ADD = $$(value $(1)_OBJ_ADD))
+$${BDIR}/$(1).elf: $${BDIR}/$(1).o $${OBJ_COMM} $$(value $(1)_OBJ_ADD) Makefile link.ld mem_ioregs.ld $${EXTDIR}/agbabi/build/$${CONF}/libagbabi.a | $${BDIR}
 	$$(link_ld)
 endef
 $(foreach prog, $(PROGS), $(eval $(call generate_linkrule,$(prog))))
