@@ -1,4 +1,4 @@
-MAKE_CONF := $(wildcard Makefile.conf)
+MAKE_CONF ::= $(wildcard Makefile.conf)
 
 ifeq ($(MAKE_CONF),)
     $(info No Makefile.conf found. Skipping include.)
@@ -33,7 +33,7 @@ EXTDIR ::= extern
 AR ::= arm-none-eabi-ar
 LD ::= arm-none-eabi-ld
 
-ifdef USE_GCC
+ifeq ($(USE_GCC),1)
 CC ::= arm-none-eabi-gcc
 CP ::= arm-none-eabi-g++
 OC ::= arm-none-eabi-objcopy
@@ -49,7 +49,7 @@ EMU ?= mgba
 EMUFL ::= -4
 
 ifdef OGBIOS
-	EMUFL += -b /data/jmk/bin/games/console/gba/GBA.BIOS
+	EMUFL += -b ${OGBIOS}
 endif
 
 GRIT ?= grit
@@ -68,18 +68,16 @@ TERMEMUFL ::= -e
 
 ## TOOL FLAGS
 
-GCC_SYSROOT ::= $(shell arm-none-eabi-gcc -mcpu=arm7tdmi -print-sysroot 2>&1)
-GCC_MULTIDIR ::= $(shell arm-none-eabi-gcc -mcpu=arm7tdmi -print-multi-directory 2>&1)
-GCC_LIBDIR ::= ${GCC_SYSROOT}/lib/${GCC_MULTIDIR}
-
 ## Some paths to host libraries/headers, defaults for current arch (based) linux
 ## should be set in Makefile.conf
 HOST_LDFL_LIBSEARCH ?= -L/usr/lib/gcc/arm-none-eabi/13.1.0/
 HOST_CPFL_LIBINC ?= -I/usr/arm-none-eabi/include/c++/13.1.0/ -I/usr/arm-none-eabi/include/c++/13.1.0/arm-none-eabi/
+HOST_CXFL_STDINC ?= -I/usr/lib/gcc/arm-none-eabi/13.1.0/include/ -I/usr/lib/clang/15.0.7/include/
 HOST_LIBCPPDIR ?= /usr/include/c++/v1/
+#HOST_GCC_LIBDIR ?= /usr/arm-none-eabi/include/
 
 ## Use agbabi and LLVM's C++ standard library
-ifdef USE_AGBABI_LIBCPP
+ifeq ($(USE_AGBABI_LIBCPP),1)
 LDFL_LIBSEARCH ?= -L${EXTDIR}/agbabi/build/${CONF}/
 CPFL_LIBINC ?= -I${HOST_LIBCPPDIR} -D_LIBCPP_HAS_NO_THREADS
 LDFL_LATE = -lagbabi
@@ -90,21 +88,36 @@ CPFL_LIBINC = ${HOST_CPFL_LIBINC}
 LDFL_LATE = -lc -lgcc
 endif
 
+GCC_LIBDIR ?= ${HOST_GCC_LIBDIR}
+CXFL_STDINC ?= ${HOST_CXFL_STDINC}
+
+## SYSROOT STUFF
+
+GCC_SYSROOT ::= $(shell arm-none-eabi-gcc -mcpu=arm7tdmi -print-sysroot 2>&1)
+ifeq ($(GCC_SYSROOT),)
+$(Info GCC_SYSROOT could not be determined. disabling)
+override USE_GCC_SYSROOT ::=
+else
+GCC_MULTIDIR ::= $(shell arm-none-eabi-gcc -mcpu=arm7tdmi -print-multi-directory 2>&1)
+ifeq ($(GCC_LIBDIR),)
+GCC_LIBDIR = ${GCC_SYSROOT}/lib/${GCC_MULTIDIR}
+endif
+endif
+
 ### COMPILER AND ASSEMBLER FLAGS
 CXASFL ::= -mcpu=arm7tdmi -Wall -Werror -I${IDIR} -I${BIDIR}
 #CXASFL += $(if ${QUIET},,-v)
 CXASFL += -Wextra
 CXASFL += -nostdlib
-#CXASFL += -nostdinc
 CXASFL += -Wshadow
 CXASFL += -Wundef
 
-ifdef USE_GCC
+ifeq ($(USE_GCC),1)
 else
 CXASFL += --target=armv4t-unknown-none-eabi
 endif
 
-ifdef DEBUG
+ifeq ($(DEBUG),1)
 #	CXASFL += -g -O0
 #	CXASFL += -ggdb3 -Os
 #	CXASFL += -ggdb -Os
@@ -114,7 +127,7 @@ else
 	CXASFL += -Os
 endif
 
-ifdef VERBOSE
+ifeq ($(VERBOSE),1)
 	CXASFL += -v
 endif
 
@@ -131,19 +144,24 @@ CXFL ::= ${CXASFL}
 #TODO: check clang stack-usage option
 CXFL += -fstack-usage
 #TODO: investigate how -sysroot works
+ifeq ($(USE_GCC_SYSROOT),1)
 CXFL += --sysroot=${GCC_SYSROOT}
-#CXFL += -I${GCC_LIBDIR}
+else
+CXFL += -I${GCC_LIBDIR}
+endif
 #CXFL += -I/usr/arm-none-eabi/include/
 ##Debug includes
 #CXFL += -H
+#TODO: evaluate -nostdinc
+#CXFL += -nostdinc
 # Only necessary when not including standard path with (-nostdinc)
-#CXFL += -I/usr/lib/gcc/arm-none-eabi/13.1.0/include/
+#CXFL += ${CXFL_STDINC}
 
 ### DEPENDENCY GENERATION FLAGS
 CXDEPS ::= -MMD -MP -MF
 
 ### COMPILER DATABASE FLAGS
-ifdef USE_GCC
+ifeq ($(USE_GCC),1)
 else
 CXCDB = -MJ ${CDBDIR}/$(notdir $@).part.json
 endif
@@ -151,7 +169,7 @@ endif
 ### ADDITIONAL C++ COMPILER FLAGS
 CPFL ::= -std=c++20 -fno-exceptions -fno-unwind-tables -fno-rtti
 CPFL += -fno-threadsafe-statics
-#CPFL += -ffreestanding #why no work? #TODO
+#CPFL += -ffreestanding #TODO: investigate if freestanding is feasable/usefull?
 #CPFL += -fmodules
 CPFL += ${CPFL_LIBINC}
 
@@ -164,7 +182,7 @@ ASFL ::= ${CXASFL}
 ### LINKER FLAGS
 LDFL ::= -nostdlib -Tlink.ld ${LDFL_LIBSEARCH} -L/usr/arm-none-eabi/lib/
 
-ifdef VERBOSE
+ifeq ($(VERBOSE),1)
 	LDFL += --verbose
 endif
 
@@ -235,13 +253,13 @@ OBJ_ADD ::=
 SCR_ADD ::=
 INC_ADD ::=
 
-pengfly_ASSETS := penguin_spriteByElthen tile_bg_ice tile_title_default apple_sprite windows_sprite android_sprite chrome_sprite tile_title_retry tile_title_win
+pengfly_ASSETS ::= penguin_spriteByElthen tile_bg_ice tile_title_default apple_sprite windows_sprite android_sprite chrome_sprite tile_title_retry tile_title_win
 
 # Generate the target specific variables for each binary
 define generate_deps
-$(1)_OBJ_ADD := $(patsubst %, ${BDIR}/%.o, $(value $(1)_ASSETS))
-$(1)_INC_ADD := $(patsubst %, %.h, $(value $(1)_ASSETS))
-$(1)_INC_DEP := $(patsubst %, ${BIDIR}/%.h, $(value $(1)_ASSETS))
+$(1)_OBJ_ADD ::= $(patsubst %, ${BDIR}/%.o, $(value $(1)_ASSETS))
+$(1)_INC_ADD ::= $(patsubst %, %.h, $(value $(1)_ASSETS))
+$(1)_INC_DEP ::= $(patsubst %, ${BIDIR}/%.h, $(value $(1)_ASSETS))
 endef
 $(foreach prog, $(PROGS), $(eval $(call generate_deps,$(prog))))
 
