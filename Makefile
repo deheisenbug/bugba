@@ -68,30 +68,10 @@ TERMEMUFL ::= -e
 
 ## TOOL FLAGS
 
-## Some paths to host libraries/headers, defaults for current arch (based) linux
-## should be set in Makefile.conf
-HOST_LDFL_LIBSEARCH ?= -L/usr/lib/gcc/arm-none-eabi/13.1.0/
-HOST_CPFL_LIBINC ?= -I/usr/arm-none-eabi/include/c++/13.1.0/ -I/usr/arm-none-eabi/include/c++/13.1.0/arm-none-eabi/
-HOST_CXFL_STDINC ?= -I/usr/lib/gcc/arm-none-eabi/13.1.0/include/ -I/usr/lib/clang/15.0.7/include/
-HOST_LIBCPPDIR ?= /usr/include/c++/v1/
-#HOST_GCC_LIBDIR ?= /usr/arm-none-eabi/include/
+## Some paths to host libraries/headers. The defaults for a current arch
+## (based) linux should available in Makefile.conf
 
-## Use agbabi and LLVM's C++ standard library
-ifeq ($(USE_AGBABI_LIBCPP),1)
-LDFL_LIBSEARCH ?= -L${EXTDIR}/agbabi/build/${CONF}/
-CPFL_LIBINC ?= -I${HOST_LIBCPPDIR} -D_LIBCPP_HAS_NO_THREADS
-LDFL_LATE = -lagbabi
-else
-## Use gcc's c/c++ standard library
-LDFL_LIBSEARCH = ${HOST_LDFL_LIBSEARCH}
-CPFL_LIBINC = ${HOST_CPFL_LIBINC}
-LDFL_LATE = -lc -lgcc
-endif
-
-GCC_LIBDIR ?= ${HOST_GCC_LIBDIR}
-CXFL_STDINC ?= ${HOST_CXFL_STDINC}
-
-## SYSROOT STUFF
+### SYSROOT STUFF
 
 GCC_SYSROOT ::= $(shell arm-none-eabi-gcc -mcpu=arm7tdmi -print-sysroot 2>&1)
 ifeq ($(GCC_SYSROOT),)
@@ -99,10 +79,45 @@ $(Info GCC_SYSROOT could not be determined. disabling)
 override USE_GCC_SYSROOT ::=
 else
 GCC_MULTIDIR ::= $(shell arm-none-eabi-gcc -mcpu=arm7tdmi -print-multi-directory 2>&1)
-ifeq ($(GCC_LIBDIR),)
-GCC_LIBDIR = ${GCC_SYSROOT}/lib/${GCC_MULTIDIR}
+ifeq ($(LDFL_C_LIBS),)
+LDFL_C_LIBS = -L${GCC_SYSROOT}/lib/${GCC_MULTIDIR}
+ifeq ($(GCC_SYSROOT),)
+@$(info No (HOST_)LDFL_C_LIBS, could also not generate one from gcc sysroot.)
+else
+$(info No (HOST_)LDFL_C_LIBS defined, defaulting to sysroot generated location: ${LDFL_C_LIBS})
 endif
 endif
+endif
+
+### Use agbabi
+USE_AGBABI ?= 0
+ifeq ($(USE_AGBABI),1)
+LDFL_C_LIBS += -L${EXTDIR}/agbabi/build/${CONF}/
+LDFL_LATE += -lagbabi
+endif
+
+USE_LIBC ?= 1
+ifeq ($(USE_LIBC),1)
+LDFL_C_LIBS += ${HOST_LDFL_C_LIBS}
+LDFL_LATE += -lc
+endif
+
+USE_LIBGCC ?= 1
+ifeq ($(USE_LIBGCC),1)
+LDFL_GCC_LIBS += ${HOST_LDFL_GCC_LIBS}
+LDFL_LATE += -lgcc
+endif
+
+### Use LLVM's C++ library
+ifeq ($(USE_LIBCPP),1)
+CPFL_LIBINC ?= ${HOST_CPFL_LIBCPP_INC} -D_LIBCPP_HAS_NO_THREADS
+else
+### Use gcc's C++ library
+CPFL_LIBINC = ${HOST_CPFL_CPP_INC}
+endif
+
+CXFL_GCC_SYSINC ?= ${HOST_CXFL_GCC_SYSINC}
+CXFL_GCC_INC ?= ${HOST_CXFL_GCC_INC}
 
 ### COMPILER AND ASSEMBLER FLAGS
 CXASFL ::= -mcpu=arm7tdmi -Wall -Werror -I${IDIR} -I${BIDIR}
@@ -133,7 +148,6 @@ endif
 
 ### CX COMPILER FLAGS
 CXFL ::= ${CXASFL}
-#TODO: this didn't fix stuff. write own libc/memcopy? or use another implementation for baremetal
 #CXFL += -fno-short-enums
 #CXFL += -fno-builtin
 #CXFL += -ffast-math
@@ -147,7 +161,7 @@ CXFL += -fstack-usage
 ifeq ($(USE_GCC_SYSROOT),1)
 CXFL += --sysroot=${GCC_SYSROOT}
 else
-CXFL += -I${GCC_LIBDIR}
+CXFL += ${CXFL_GCC_SYSINC}
 endif
 #CXFL += -I/usr/arm-none-eabi/include/
 ##Debug includes
@@ -155,7 +169,7 @@ endif
 #TODO: evaluate -nostdinc
 #CXFL += -nostdinc
 # Only necessary when not including standard path with (-nostdinc)
-#CXFL += ${CXFL_STDINC}
+#CXFL += ${CXFL_GCC_INC}
 
 ### DEPENDENCY GENERATION FLAGS
 CXDEPS ::= -MMD -MP -MF
@@ -180,7 +194,7 @@ CCFL ::=
 ASFL ::= ${CXASFL}
 
 ### LINKER FLAGS
-LDFL ::= -nostdlib -Tlink.ld ${LDFL_LIBSEARCH} -L/usr/arm-none-eabi/lib/
+LDFL ::= -nostdlib -Tlink.ld ${LDFL_GCC_LIBS} ${LDFL_C_LIBS}
 
 ifeq ($(VERBOSE),1)
 	LDFL += --verbose
@@ -267,12 +281,12 @@ $(foreach prog, $(PROGS), $(eval $(call generate_deps,$(prog))))
 
 # C compilation rule macro/function
 define compile_cc
-	${CC} ${CXFL} ${CXDEPS} ${DEPDIR}/$(notdir $@).d ${CXCDB} ${CCFL} $(addprefix -include ,${INC_ADD}) -S $< -o $@
+	${CC} ${CCFL} ${CXFL} ${CXDEPS} ${DEPDIR}/$(notdir $@).d ${CXCDB} $(addprefix -include ,${INC_ADD}) -S $< -o $@
 endef
 
 # CPP compilation rule macro/function
 define compile_cp
-	${CP} ${CXFL} ${CXDEPS} ${DEPDIR}/$(notdir $@).d ${CXCDB} ${CPFL} $(addprefix -include ,${INC_ADD}) -S $< -o $@
+	${CP} ${CPFL} ${CXFL} ${CXDEPS} ${DEPDIR}/$(notdir $@).d ${CXCDB} $(addprefix -include ,${INC_ADD}) -S $< -o $@
 endef
 
 # C source compilation rules
