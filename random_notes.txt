@@ -2,10 +2,24 @@
 
 ## BUILD
 
-- stdlib/libgcc/compiler-rt
+- create stable (runtime) library setup
+  - stdlib/libgcc/compiler-rt
+  - maybe as git submodules?
+- alternatively base evething on devkitpro being available?
+  - make clang use the devkitpro paths? for libc/libgcc
 
 later:
 - VPATH make
+
+### Debian installation
+
+```
+apt install clang cmake git build-essential mgba-sdl dialog git gcc-arm-none-eabi neovim libc++-dev wget
+wget https://apt.devkitpro.org/install-devkitpro-pacman
+chmod +x ./install-devkitpro-pacman
+./install-devkitpro-pacman
+dkp-pacman -Syu gba-dev
+```
 
 ## MISC
 
