@@ -33,8 +33,8 @@ EXTDIR ::= extern
 ### Use DevkitPro
 USE_DKP ?= 0
 ifeq ($(USE_DKP),1)
-DEVKITPATH=$(shell echo "$(DEVKITPRO)" | sed -e 's/^\([a-zA-Z]\):/\/\1/')
-export PATH ::= $(DEVKITPATH)/tools/bin:$(DEVKITPATH)/devkitARM/bin:$(PATH)
+DEVKITPATH=$(shell echo "${DEVKITPRO}" | sed -e 's/^\([a-zA-Z]\):/\/\1/')
+export PATH ::= ${DEVKITPATH}/tools/bin:${DEVKITPATH}/devkitARM/bin:${PATH}
 #TODO: remove this workaround. used as somehow there is no default include with dkp
 HOST_LDFL_GCC_LIBS = -L${DEVKITARM}/lib/gcc/arm-none-eabi/13.1.0/
 HOST_LDFL_C_LIBS = -L${DEVKITARM}/arm-none-eabi/lib/
