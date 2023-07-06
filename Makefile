@@ -380,14 +380,18 @@ endef
 #-lc -lgcc 
 
 # Basic linking rule
-${BDIR}/%.elf: ${BDIR}/%.o ${OBJ_COMM} Makefile link.ld mem_ioregs.ld ${EXTDIR}/agbabi/build/${CONF}/libagbabi.a | ${BDIR}
+${BDIR}/%.elf: ${BDIR}/%.o ${OBJ_COMM} Makefile link.ld mem_ioregs.ld | ${BDIR}
 	$(link_ld)
 
 # Generated linking rules per binary
 define generate_linkrule
 $$(eval $(1) : OBJ_ADD = $$(value $(1)_OBJ_ADD))
-$${BDIR}/$(1).elf: $${BDIR}/$(1).o $${OBJ_COMM} $$(value $(1)_OBJ_ADD) Makefile link.ld mem_ioregs.ld $${EXTDIR}/agbabi/build/$${CONF}/libagbabi.a | $${BDIR}
+$${BDIR}/$(1).elf: $${BDIR}/$(1).o $${OBJ_COMM} $$(value $(1)_OBJ_ADD) Makefile link.ld mem_ioregs.ld | $${BDIR}
 	$$(link_ld)
+
+ifeq ($(USE_AGBABI),1)
+$${BDIR}/$(1).elf: $${EXTDIR}/agbabi/build/$${CONF}/libagbabi.a
+endif
 endef
 $(foreach prog, $(PROGS), $(eval $(call generate_linkrule,$(prog))))
 
