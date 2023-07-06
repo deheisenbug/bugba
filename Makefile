@@ -42,17 +42,26 @@ USE_STDLIB ::= 1
 USE_GCC ::= 1
 endif
 
-AR ::= arm-none-eabi-ar
-LD ::= arm-none-eabi-ld
+GNU_AR ?= arm-none-eabi-ar
+GNU_LD ?= arm-none-eabi-ld
+GNU_CC ?= arm-none-eabi-gcc
+GNU_CP ?= arm-none-eabi-g++
+GNU_OC ?= arm-none-eabi-objcopy
+LLVM_CC ?= clang
+LLVM_CP ?= clang++
+LLVM_OC ?= llvm-objcopy
+
+AR ::= ${GNU_AR}
+LD ::= ${GNU_LD}
 
 ifeq ($(USE_GCC),1)
-CC ::= arm-none-eabi-gcc
-CP ::= arm-none-eabi-g++
-OC ::= arm-none-eabi-objcopy
+CC ::= ${GNU_CC}
+CP ::= ${GNU_CP}
+OC ::= ${GNU_OC}
 else
-CC ::= clang
-CP ::= clang++
-OC ::= llvm-objcopy
+CC ::= ${LLVM_CC}
+CP ::= ${LLVM_CP}
+OC ::= ${LLVM_OC}
 endif
 
 ifeq ($(VERBOSE),1)
@@ -110,7 +119,9 @@ LDFL_C_LIBS = -L${GCC_SYSROOT}/lib/${GCC_MULTIDIR}
 ifeq ($(GCC_SYSROOT),)
 @$(info No (HOST_)LDFL_C_LIBS, could also not generate one from gcc sysroot.)
 else
+ifeq ($(VERBOSE),1)
 $(info No (HOST_)LDFL_C_LIBS defined, defaulting to sysroot generated location: ${LDFL_C_LIBS})
+endif
 endif
 endif
 endif
