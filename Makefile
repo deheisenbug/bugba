@@ -30,6 +30,18 @@ EXTDIR ::= extern
 
 ## TOOLS/COMPILER
 
+### Use DevkitPro
+USE_DKP ?= 0
+ifeq ($(USE_DKP),1)
+DEVKITPATH=$(shell echo "$(DEVKITPRO)" | sed -e 's/^\([a-zA-Z]\):/\/\1/')
+export PATH ::= $(DEVKITPATH)/tools/bin:$(DEVKITPATH)/devkitARM/bin:$(PATH)
+#TODO: remove this workaround. used as somehow there is no default include with dkp
+HOST_LDFL_GCC_LIBS = -L${DEVKITARM}/lib/gcc/arm-none-eabi/13.1.0/
+HOST_LDFL_C_LIBS = -L${DEVKITARM}/arm-none-eabi/lib/
+USE_STDLIB ::= 1
+USE_GCC ::= 1
+endif
+
 AR ::= arm-none-eabi-ar
 LD ::= arm-none-eabi-ld
 
@@ -41,6 +53,20 @@ else
 CC ::= clang
 CP ::= clang++
 OC ::= llvm-objcopy
+endif
+
+ifeq ($(VERBOSE),1)
+$(info Tool information:)
+PRINT_CC = $(shell which ${CC})
+PRINT_CP = $(shell which ${CP})
+PRINT_OC = $(shell which ${OC})
+PRINT_AR = $(shell which ${AR})
+PRINT_LD = $(shell which ${LD})
+$(info CC: ${PRINT_CC})
+$(info CP: ${PRINT_CP})
+$(info OC: ${PRINT_OC})
+$(info AR: ${PRINT_AR})
+$(info LD: ${PRINT_LD})
 endif
 
 ## TOOLS/OTHER
@@ -123,9 +149,14 @@ CXFL_GCC_INC ?= ${HOST_CXFL_GCC_INC}
 CXASFL ::= -mcpu=arm7tdmi -Wall -Werror -I${IDIR} -I${BIDIR}
 #CXASFL += $(if ${QUIET},,-v)
 CXASFL += -Wextra
-CXASFL += -nostdlib
 CXASFL += -Wshadow
 CXASFL += -Wundef
+
+USE_STDLIB ?= 0
+ifeq ($(USE_STDLIB),1)
+else
+CXASFL += -nostdlib
+endif
 
 ifeq ($(USE_GCC),1)
 else
@@ -194,7 +225,11 @@ CCFL ::=
 ASFL ::= ${CXASFL}
 
 ### LINKER FLAGS
-LDFL ::= -nostdlib -Tlink.ld ${LDFL_GCC_LIBS} ${LDFL_C_LIBS}
+LDFL ::= -Tlink.ld ${LDFL_GCC_LIBS} ${LDFL_C_LIBS}
+ifeq ($(USE_STDLIB),1)
+else
+LDFL += -nostdlib
+endif
 
 ifeq ($(VERBOSE),1)
 	LDFL += --verbose
