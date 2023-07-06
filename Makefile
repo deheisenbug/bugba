@@ -65,7 +65,7 @@ OC ::= ${LLVM_OC}
 endif
 
 ifeq ($(VERBOSE),1)
-$(info Tool information:)
+$(info Tool information (only accurate with Make >4.4):)
 PRINT_CC = $(shell which ${CC})
 PRINT_CP = $(shell which ${CP})
 PRINT_OC = $(shell which ${OC})
